@@ -46,10 +46,10 @@ class ScoreBoardController extends Controller
         $sortDirection = $request->get('direction', 'desc');
 
         // ✅ Main query
-        $query = UserCourse::with([
-            'user',
-            'course.category.language'
-        ])->where('status', 1);
+       $query = UserCourse::with([
+    'user',
+    'course.category.language'
+])->where('user_courses.status', 1);
 
         // ✅ Apply filters
         if ($category_id) {
