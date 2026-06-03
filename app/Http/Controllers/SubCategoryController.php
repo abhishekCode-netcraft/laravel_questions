@@ -89,7 +89,7 @@ class SubCategoryController extends Controller
 
         $dropdown_list = [
             'Select Language' => $languages,
-            'Select Category' => $categories ?? [],
+            'Select Category' => [],
         ];
 
         return view('sub-category.index', compact(

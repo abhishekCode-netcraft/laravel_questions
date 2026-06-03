@@ -28,7 +28,7 @@ class VideosImport implements ToModel, WithHeadingRow, SkipsOnError, WithValidat
             'topic_id' => 'required|integer',
             'description' => 'nullable|string',
             'youtube_link' => 'nullable|string|max:255',
-            'video_type' => 'nullable|string|max:50',
+            'video_type' => 'required|string|max:50',
             'video_name' => 'required',
             'pdf_link'    => 'nullable'
         ];
@@ -39,7 +39,7 @@ class VideosImport implements ToModel, WithHeadingRow, SkipsOnError, WithValidat
         $video = Video::find($row['id']);
 
         if ($video) {
-            $videoFileName = $this->createFolderOnServer($row);
+            $videoFileName = $this->createFolderOnServer($row, $video->id);
 
             $video->update([
                 'name' => $row['name'],
@@ -53,11 +53,10 @@ class VideosImport implements ToModel, WithHeadingRow, SkipsOnError, WithValidat
                 'sub_category_id' => $row['sub_category_id'],
                 'subject_id' => $row['subject_id'],
             ]);
+
             return null;
         } else {
-            $videoFileName = $this->createFolderOnServer($row);
-
-            Video::create([
+            $video = Video::create([
                 'name' => $row['name'],
                 'v_no' => $row['v_no'],
                 'duration' => $row['duration'],
@@ -65,14 +64,19 @@ class VideosImport implements ToModel, WithHeadingRow, SkipsOnError, WithValidat
                 'description' => $row['description'],
                 'youtube_link' => $row['youtube_link'],
                 'video_type' => $row['video_type'],
-                'video_link' => $videoFileName,
+                //'video_link' => $videoFileName,
                 'sub_category_id' => $row['sub_category_id'],
                 'subject_id' => $row['subject_id'],
+            ]);
+
+            $videoFileName = $this->createFolderOnServer($row, $video->id);
+            $video->update([
+                'video_link' => $videoFileName
             ]);
         }
     }
 
-    public function createFolderOnServer($row)
+    public function createFolderOnServer($row, $id)
     {
         $language  = \App\Models\Language::find($row['language_id']);
         $category  = \App\Models\Category::find($row['category_id']);
@@ -87,14 +91,17 @@ class VideosImport implements ToModel, WithHeadingRow, SkipsOnError, WithValidat
             $subject->id . '-' . $subject->name . '/' .
             $topic->id . '-' . $topic->name;
 
-        // File name
-        $fileName = $row['video_name'];
-
         // Create 3 quality folders
         $qualities = ['720p', '480p', '320p'];
-
         foreach ($qualities as $quality) {
-            $videoFileName[] = $path . '/videos/' . $quality . '/' . $fileName;
+            $fileName = $row['video_name'];
+            $fileInfo = pathinfo($fileName);
+            $onlyName = explode('.', $fileName)[0];
+
+            $newFileName = $fileInfo['filename'] . '_' . $quality . '.' . $fileInfo['extension'];
+
+            $videoFileName[] = $path . '/videos/' . $id . "-" . $onlyName . '/' . $newFileName;
+
             Storage::disk('minio')->put($videoFileName[count($videoFileName) - 1], '');
         }
 

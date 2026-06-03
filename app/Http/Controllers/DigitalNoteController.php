@@ -102,9 +102,9 @@ class DigitalNoteController extends Controller
     public function getCourseDigitalNotes(Request $request, $userId, $courseId)
     {
         // Validate request
-        $request->validate([
-            'topic_id' => 'required|exists:topics,id'
-        ]);
+        //$request->validate([
+        //  'topic_id' => 'required|exists:topics,id'
+        //]);
 
         // 1. Check User existence
         $user = GoogleUser::find($userId);
@@ -146,7 +146,7 @@ class DigitalNoteController extends Controller
 
         // 4. Build Query
         $query = DigitalNote::with(['language', 'category', 'subCategory', 'subject', 'topic'])
-            ->where('topic_id', $request->topic_id);
+            ->whereIn('topic_id', $course->topic_id);
 
         // 5. Sorting
         $sort = $request->get('sort', 'id');
@@ -174,26 +174,26 @@ class DigitalNoteController extends Controller
             'from' => $notes->firstItem(),
             'to' => $notes->lastItem(),
             'notes' => $notes->getCollection()->map(function ($note) {
-            return [
-            'id' => $note->id,
-            'name' => $note->name,
-            'photo_url' => $note->photo ? asset('storage/' . $note->photo) : null,
-            'language_id' => $note->language_id,
-            'language_name' => $note->language->name ?? null,
-            'category_id' => $note->category_id,
-            'category_name' => $note->category->name ?? null,
-            'sub_category_id' => $note->sub_category_id,
-            'sub_category_name' => $note->subCategory->name ?? null,
-            'subject_id' => $note->subject_id,
-            'subject_name' => $note->subject->name ?? null,
-            'topic_id' => $note->topic_id,
-            'topic_name' => $note->topic->name ?? null,
-            'content' => $note->content,
-            'status' => $note->status,
-            'created_at' => $note->created_at,
-            'updated_at' => $note->updated_at,
-            ];
-        }),
+                return [
+                    'id' => $note->id,
+                    'name' => $note->name,
+                    'photo_url' => $note->photo ? asset('storage/' . $note->photo) : null,
+                    'language_id' => $note->language_id,
+                    'language_name' => $note->language->name ?? null,
+                    'category_id' => $note->category_id,
+                    'category_name' => $note->category->name ?? null,
+                    'sub_category_id' => $note->sub_category_id,
+                    'sub_category_name' => $note->subCategory->name ?? null,
+                    'subject_id' => $note->subject_id,
+                    'subject_name' => $note->subject->name ?? null,
+                    'topic_id' => $note->topic_id,
+                    'topic_name' => $note->topic->name ?? null,
+                    'content' => $note->content,
+                    'status' => $note->status,
+                    'created_at' => $note->created_at,
+                    'updated_at' => $note->updated_at,
+                ];
+            }),
         ];
 
         return response()->json([

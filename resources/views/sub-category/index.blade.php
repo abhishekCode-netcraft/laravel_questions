@@ -283,21 +283,21 @@
                 </select>
             </div>
 
-            <div class="mb-4">
+            {{-- <div class="mb-4">
                 <label class="block mb-2 text-sm font-medium text-gray-900">Plan</label>
                 <select name="plan_type" id="plan_type" class="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5">
                 <option value="">Select Plan</option>
                     <option value="free">Free</option>
                     <option value="paid">Paid</option>
                 </select>
-            </div>
+            </div> --}}
 
             @php
                 $plans = ['Plan-1', 'Plan-2', 'Plan-3'];
             @endphp
 
             @foreach ($plans as $index => $plan)
-                <div class="mb-4">
+                {{-- <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ $plan }}</label>
                     
                     <div class="grid grid-cols-2 gap-4">
@@ -305,7 +305,7 @@
                         
                         <input type="number" name="plans[{{ $index }}][validity]" class="block w-full border-gray-300 rounded-md shadow-sm" placeholder="Validity" >
                     </div>
-                </div>
+                </div> --}}
             @endforeach
 
             <div class="mb-5">
@@ -364,7 +364,7 @@
                 document.getElementById('name').value = name;
                 document.getElementById('select_language').value = languageId;
                 document.getElementById('select_category').value = categoryId;
-                document.getElementById('plan_type').value = plan_type;
+                // document.getElementById('plan_type').value = plan_type;
                 document.getElementById('status').value = status;
                 document.getElementById('parent_id').value = parentId;
 

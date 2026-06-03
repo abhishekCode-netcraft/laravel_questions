@@ -29,6 +29,11 @@ class Video extends Model
         'video_link' => 'array',
     ];
 
+    public function videoProgress()
+    {
+        return $this->hasOne(VideoProgress::class);
+    }
+
     public function topic()
     {
         return $this->belongsTo(Topic::class);

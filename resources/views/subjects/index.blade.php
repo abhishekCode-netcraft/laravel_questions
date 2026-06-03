@@ -128,13 +128,6 @@
                 <th scope="col" class="px-6 py-3">
                     Status
                 </th>
-
-                <th scope="col" class="px-6 py-3">
-                    Plan
-                </th>
-                <th scope="col" class="px-6 py-3">
-                    Amount
-                </th>
                 <th scope="col" class="px-6 py-3">
                     Action
                 </th>
@@ -178,20 +171,6 @@
 
                 <th scope="row" class="px-6 py-4 font-medium whitespace-nowrap {{ $statusClass }}">
                     {{ $status }}
-                </th>
-
-
-                @php
-                $plan = ucfirst($subject->plan);
-                $planClass = $subject->plan === 'Free' ? 'text-green-600' : 'text-red-600';
-                @endphp
-
-                <th scope="row" class="px-6 py-4 font-medium whitespace-nowrap {{ $planClass }}">
-                    {{ $plan }}
-                </th>
-
-                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    {{$subject->amount}}
                 </th>
 
                 <td class="px-6 py-4 flex gap-4">
@@ -266,7 +245,7 @@
             @csrf
             <input type="hidden" name="_method" value="">
 
-            <div class="mb-3 relative" style="height: 100px;">
+            <div class="relative" style="height: 100px;">
                 <div class="container">
                     <input accept="image/*" type="file" class="opacity-0 w-[100] h-[100] absolute z-10 cursor-pointer" name="photo" style="width: 100px; height:100px;" id='fileInput' />
                     <img class="inline-block h-8 w-8 rounded-full ring-2 ring-white image" src="/dummy.jpg" alt="" id='subjectImage' style='width:100px;height:100px;'>
@@ -326,25 +305,6 @@
                 </select>
             </div>
 
-            <div class="mb-4">
-                <label class="block mb-2 text-sm font-medium text-gray-900">Plan</label>
-                <select name="plan" id="plan" class="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5">
-                    <option value="">Select Plan</option>
-                    <option value="Free">Free</option>
-                    <option value="Paid">Paid</option>
-                </select>
-            </div>
-
-            <div class="mb-4">
-
-
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="number" step="0.01" name="amount" id="amount" class="block w-full border-gray-300 rounded-md shadow-sm" placeholder="Amount">
-
-                    <input type="number" name="validity" id="validity" class="block w-full border-gray-300 rounded-md shadow-sm" placeholder="Validity">
-                </div>
-            </div>
-
             <div class="mx-auto mb-5">
                 <label for="countries" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Parent ID</label>
                 <input type="number" name="parent_id" id='select_parent_id' class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
@@ -392,8 +352,6 @@
                 const plan = this.getAttribute('data-plan');
                 const dataamount = this.getAttribute('data-amount');
                 const validity = this.getAttribute('data-validity');
-                console.log("plan", plan);
-                console.log("validity", validity)
                 // Set modal for editing a subcategory
                 document.getElementById('modalTitle').innerText = 'Edit Subject';
                 document.getElementById('modalForm').action = `/subject/${id}`;
@@ -405,9 +363,9 @@
                 document.getElementById('select_sub_category').value = subCategoryId;
                 document.getElementById('select_parent_id').value = parentId;
                 document.getElementById('status').value = status;
-                document.getElementById('plan').value = plan;
-                document.getElementById('amount').value = dataamount;
-                document.getElementById('validity').value = validity;
+                //document.getElementById('plan').value = plan;
+                //document.getElementById('amount').value = dataamount;
+                //document.getElementById('validity').value = validity;
                 document.getElementById('subjectImage').src = photo ? `/storage/${photo}` : '/dummy.jpg';
                 document.getElementById('modal').style.display = 'flex';
             });

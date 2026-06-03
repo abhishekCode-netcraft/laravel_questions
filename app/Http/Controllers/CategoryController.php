@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Language;
+use App\Models\Course;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\CategoryExport;
@@ -269,11 +270,28 @@ class CategoryController extends Controller
      *     )
      * )
      */
-    public function getCategoriesByLanguage($language_id)
+    public function getCategoriesByLanguage($language_id, $couseId)
     {
-        $categories = Category::with('subcategory.subject.topic')
-            ->where('language_id', $language_id)
-            ->get();
+        $course = Course::find($couseId);
+
+        $subjectIds = $course->subject_id;
+        $topicIds = $course->topic_id;
+
+        $query = Category::with([
+            'subcategory.subject' => function ($q) use ($subjectIds, $topicIds) {
+                $q->whereIn('id', $subjectIds)
+                    ->with([
+                        'topic' => function ($topicQuery) use ($topicIds) {
+                            $topicQuery->whereIn('id', $topicIds);
+                        }
+                    ]);
+            },
+            'subcategory.subject.topic'
+        ])
+            ->where('language_id', $language_id);
+
+
+        $categories = $query->get();
 
         if ($categories->isEmpty()) {
             return response()->json([

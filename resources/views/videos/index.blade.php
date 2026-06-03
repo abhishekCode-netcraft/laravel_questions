@@ -210,20 +210,17 @@
                         $videoLinks = [];
 
                         if ($video->video_link) {
-                            $paths = is_array($video->video_link)
-                                ? $video->video_link
-                                : json_decode($video->video_link, true);
+                            $paths = $video->video_link;
 
                             if (is_array($paths)) {
                                 foreach ($paths as $path) {
 
                                     $quality = '-';
-
-                                    if (str_contains($path, '/720p/')) {
+                                    if (str_contains($path, '720p')) {
                                         $quality = '720p';
-                                    } elseif (str_contains($path, '/480p/')) {
+                                    } elseif (str_contains($path, '480p')) {
                                         $quality = '480p';
-                                    } elseif (str_contains($path, '/320p/')) {
+                                    } elseif (str_contains($path, '320p')) {
                                         $quality = '320p';
                                     }
 

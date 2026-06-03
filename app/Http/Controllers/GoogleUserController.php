@@ -181,9 +181,7 @@ class GoogleUserController extends Controller
             if ($path) {
                 $data['profile_image'] = $path; // profile_images/filename.jpg
             }
-
-        }
-        elseif ($request->filled('profile_image')) {
+        } elseif ($request->filled('profile_image')) {
             $imageInput = $request->profile_image;
 
             // ✅ Option 2: Base64 Image (data:image/png;base64,...)
@@ -199,7 +197,6 @@ class GoogleUserController extends Controller
                 Storage::disk('public')->put($path, $imageData);
 
                 $data['profile_image'] = $path;
-
             }
             // ✅ Option 3: Direct URL (already hosted image)
             elseif (filter_var($imageInput, FILTER_VALIDATE_URL)) {
@@ -222,12 +219,10 @@ class GoogleUserController extends Controller
             // Agar URL hai toh as-is, warna storage URL banayein
             if (filter_var($user->profile_image, FILTER_VALIDATE_URL)) {
                 $userData['profile_image_url'] = $user->profile_image;
-            }
-            else {
+            } else {
                 $userData['profile_image_url'] = asset('storage/' . $user->profile_image);
             }
-        }
-        else {
+        } else {
             $userData['profile_image_url'] = null;
         }
 
@@ -283,8 +278,8 @@ class GoogleUserController extends Controller
 
             Mail::to($user->email)
                 ->send(new OTP([
-                'otp' => __($otp),
-            ]));
+                    'otp' => __($otp),
+                ]));
 
             $user->update([
                 'otp' => $otp
@@ -294,8 +289,7 @@ class GoogleUserController extends Controller
                 'status' => true,
                 'message' => 'OTP successfully sent'
             ], 200);
-        }
-        else {
+        } else {
             $originalOTP = $user->otp;
 
             if ($originalOTP != request()->otp) {
@@ -376,14 +370,18 @@ class GoogleUserController extends Controller
             ], 404);
         }
 
-        $activePlan = UserCourse::where('user_id', $id)
+        $activePlan = UserCourse::with('course')
+            ->where('user_id', $id)
             ->where('status', 1)
             ->first();
 
         $data = $user->toArray();
 
-        $data['plan'] = $activePlan;
-
+        if ($activePlan) {
+            $data['active_plan'] = $activePlan->course->name;
+        }
+        unset($data['otp']);
+        unset($data['plan']);
 
         return response()->json([
             'status' => true,

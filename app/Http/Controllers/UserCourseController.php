@@ -27,26 +27,26 @@ class UserCourseController extends Controller
             $autoRenewing = $metaData['auto_renewing'] ?? false;
 
             return [
-            'user_id' => $userCourse->user_id,
-            'course_id' => $userCourse->course_id,
-            'plan_type' => $userCourse->subscription_type,
-            'valid_from' => $userCourse->valid_from,
-            'valid_to' => $userCourse->valid_to,
-            'subscription_source' => $subscriptionSource,
-            'auto_renewing' => (bool)$autoRenewing,
-            'course_detail' => $course ? [
-            'id' => $course->id,
-            'name' => $course->name,
-            'meta_data' => $course->meta_data,
-            'features' => $course->features,
-            'language_id' => $course->language_id,
-            'category_id' => $course->category_id,
-            'sub_category_id' => $course->sub_category_id,
-            'subject_id' => $course->subject_id,
-            'status' => $course->status,
-            'subscription' => $course->subscription,
-            'banner' => $course->banner,
-            ] : null,
+                'user_id' => $userCourse->user_id,
+                'course_id' => $userCourse->course_id,
+                'plan_type' => $userCourse->subscription_type,
+                'valid_from' => $userCourse->valid_from,
+                'valid_to' => $userCourse->valid_to,
+                'subscription_source' => $subscriptionSource,
+                'auto_renewing' => (bool)$autoRenewing,
+                'course_detail' => $course ? [
+                    'id' => $course->id,
+                    'name' => $course->name,
+                    'meta_data' => $course->meta_data,
+                    'features' => $course->features,
+                    'language_id' => $course->language_id,
+                    'category_id' => $course->category_id,
+                    'sub_category_id' => $course->sub_category_id,
+                    'subject_id' => $course->subject_id,
+                    'status' => $course->status,
+                    'subscription' => $course->subscription,
+                    'banner' => $course->banner,
+                ] : null,
             ];
         });
 
@@ -65,6 +65,18 @@ class UserCourseController extends Controller
             'valid_from' => 'required|date',
             'valid_to' => 'required|date|after_or_equal:valid_from',
         ]);
+
+        // Check if already assigned
+        $alreadyAssigned = UserCourse::where('user_id', $validated['user_id'])
+            ->where('course_id', $validated['course_id'])
+            ->exists();
+
+        if ($alreadyAssigned) {
+            return response()->json([
+                'status' => false,
+                'message' => 'This course is already assigned to the user.'
+            ], 409);
+        }
 
         $userCourse = UserCourse::create($validated);
 

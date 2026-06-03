@@ -79,9 +79,9 @@ class TopicController extends Controller
 
         $dropdown_list = [
             'Select Language' => $languages,
-            'Select Category' => $categories,
-            'Select Sub Category' => $subcategories ?? [],
-            'Select Subject' => $subjects ?? [],
+            'Select Category' => [],
+            'Select Sub Category' => [],
+            'Select Subject' => [],
         ];
 
         // Return the view with all necessary data

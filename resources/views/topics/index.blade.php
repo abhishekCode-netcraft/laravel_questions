@@ -345,14 +345,14 @@
                 </select>
             </div>
 
-            <div class="form-group">
+            {{-- <div class="form-group">
                 <label for="access">Access</label>
                 <select name="access" id="access" class="form-control">
                     <option value="unlock">Unlock</option>
                     <option value="lock">Lock</option>
 
                 </select>
-            </div>
+            </div> --}}
 
             <button type="submit" style="background-color: #2563EB; color: white; font-size: 14px; font-weight: 500; border-radius: 8px; padding: 8px 16px; border: none; cursor: pointer;">
                 Save
@@ -411,7 +411,7 @@
                 document.getElementById('modalForm').querySelector('input[name="_method"]').value = 'PUT';
                 document.getElementById('name').value = name;
                 document.getElementById('status').value = status;
-                document.getElementById('access').value = access;
+                // document.getElementById('access').value = access;
                 document.getElementById('select_language').value = languageId;
                 document.getElementById('select_category').value = categoryId;
                 document.getElementById('select_sub_category').value = subCategoryId;

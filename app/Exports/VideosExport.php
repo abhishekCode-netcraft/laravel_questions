@@ -86,6 +86,7 @@ class VideosExport implements FromCollection, WithHeadings
                     })->filter()->implode(', ')
                     : '',
                 'video_type' => $video->video_type,
+                'video_name' => $video->name . ".mp4",
                 'pdf_link' => explode('/', $video->pdf_link)[6] ?? $video->pdf_link,
                 'duration' => $video->duration,
             ];
@@ -108,6 +109,7 @@ class VideosExport implements FromCollection, WithHeadings
             'youtube_link',
             'video_link',
             'video_type',
+            'video_name',
             'pdf_link',
             'duration'
         ];

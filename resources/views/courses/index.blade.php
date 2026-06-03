@@ -130,7 +130,7 @@
                 </select>
             </div>
 
-            <div class="mb-4">
+            <div class="mb-4 subscription_section">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Subscription Plans</label>
 
                 <!-- Monthly -->
@@ -201,9 +201,9 @@
             <div class="mb-3">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Subscription Tier</label>
                 <select id="tier" name="tier" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                    <option value="sub_basic">Basic</option>
-                    <option value="sub_standard">Standard</option>
-                    <option value="sub_premium">Premium</option>
+                    <option value="basic">Basic</option>
+                    <option value="standard">Standard</option>
+                    <option value="premium">Premium</option>
                 </select>
             </div>
 
@@ -274,6 +274,14 @@
         handleSelectAll('#select_sub_category');
         handleSelectAll('#select_topic');
         handleSelectAll('#select_features');
+
+        $('#paid_free').change(function(){
+            if ($(this).val() == '0') {
+                $('.subscription_section').show();
+            } else {
+                $('.subscription_section').hide();
+            }
+        });
     });
 
     function updateSubCategoryLabel() {

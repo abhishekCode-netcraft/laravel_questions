@@ -10,14 +10,15 @@ use Illuminate\Http\Request;
 use App\Exports\VideosExport;
 use App\Exports\SampleVideosExport;
 use App\Imports\VideosImport;
-use App\Models\Question;
 use App\Models\Topic;
 use App\Models\Subject;
 use App\Models\Video;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Storage; // ✅ Correctly placed here
 use Illuminate\Support\Facades\Validator;
 use App\Models\VideoProgress;
+use FFMpeg\FFProbe;
+
 
 class VideoController extends Controller
 {
@@ -152,7 +153,6 @@ class VideoController extends Controller
         return Excel::download(new SampleVideosExport(), 'sample-videos.xlsx');
     }
 
-
     public function import(Request $request)
     {
         $request->validate([
@@ -201,6 +201,7 @@ class VideoController extends Controller
      */
     public function store(Request $request)
     {
+        //      dd(request()->all());
         $request->validate([
             'name' => 'required',
             'sub_category_id' => 'required',
@@ -218,16 +219,10 @@ class VideoController extends Controller
             $fileName = "thumbnail/" . time() . "_photo.jpg";
             $request->file('thumbnail')->storePubliclyAs('public', $fileName);
             $video->thumbnail = $fileName;
-
-            // $path = request()->language_id . "/" . request()->category_id . "/" . request()->sub_category_id . "/" . request()->subject_id . "/" . request()->topic_id;
-            // $fileName = $path . '/thumbnails/' . time() . '_' . $request->file('thumbnail')->getClientOriginalName();
-            // Storage::disk('minio')->put($fileName, file_get_contents($request->file('thumbnail')));
-            // $video->thumbnail = $fileName;
         }
 
         if ($request->hasFile('pdf_link')) {
             $path = request()->language_id . "/" . request()->category_id . "/" . request()->sub_category_id . "/" . request()->subject_id . "/" . request()->topic_id;
-
             $pdfFileName = $path . '/pdfs/' . $request->file('pdf_link')->getClientOriginalName();
             Storage::disk('minio')->put($pdfFileName, '');
             $video->pdf_link = $pdfFileName;
@@ -434,11 +429,21 @@ class VideoController extends Controller
             }
 
             if (isset($topics2[$outkey])) {
-                $videos = $this->getFirstDropdownData($requestData, $topics2[$outkey])
-                    ? $this->getFirstDropdownData($requestData, $topics2[$outkey])['videos']
-                    : [];
+                if (in_array($topics2[$outkey]->id, $course->topic_id)) {
+                    $videos = $this->getFirstDropdownData($requestData, $topics2[$outkey])
+                        ? $this->getFirstDropdownData($requestData, $topics2[$outkey])['videos']
+                        : [];
 
-                $jsonResponse[$languageName][$categoryName][$subcategoryName][$subjectName][$topics[$outkey]->id][$topicsName] = $videos;
+                    $videos->map(function ($video) {
+                        if ($video->videoProgress) {
+                            $video->duration = $video->videoProgress->video_total_seconds;
+                        }
+
+                        unset($video['videoProgress']);
+                    });
+
+                    $jsonResponse[$languageName][$categoryName][$subcategoryName][$subjectName][$topics[$outkey]->id][$topicsName] = $videos;
+                }
             }
         }
 
@@ -472,27 +477,22 @@ class VideoController extends Controller
     function getFirstDropdownData($data, $topic = null)
     {
         $languageId = $data['Language'] ?? null;
-
         $categoryId = $data['Category'] ?? null;
-
         $subjectId = $data['Subject'] ?? null;
-
         $subCategory2 = $data['SubCategory_2'] ?? null;
-
         $subject2 = $data['Subject_2'] ?? null;
 
         if (!$categoryId) return response()->json(['error' => 'Category parameter is missing'], 400);
 
-        $videos = Video::where('sub_category_id', $subCategory2)
+        $videos = Video::with('videoProgress')
+            ->where('sub_category_id', $subCategory2)
             ->where('subject_id', $subject2)
             ->where('topic_id', $topic?->id);
 
         $videos = $videos->get();
 
         $videos->map(function ($video) {
-            /* Video Links (720p / 480p / 320p) */
             if ($video->video_link) {
-
                 $paths = is_array($video->video_link)
                     ? $video->video_link
                     : json_decode($video->video_link, true);
@@ -501,24 +501,37 @@ class VideoController extends Controller
 
                 if (is_array($paths)) {
                     foreach ($paths as $path) {
+                        try {
+                            $quality = '';
+                            if (str_contains($path, '_720p')) {
+                                $quality = '720p';
+                            } elseif (str_contains($path, '_480p')) {
+                                $quality = '480p';
+                            } elseif (str_contains($path, '_320p')) {
+                                $quality = '320p';
+                            }
 
-                        $quality = '';
+                            // $ffprobe = FFProbe::create();
+                            // $tempUrl = Storage::disk('s3')->temporaryUrl(
+                            // $path,
+                            // now()->addMinutes(30)
+                            // );
 
-                        if (str_contains($path, '/720p/')) {
-                            $quality = '720p';
-                        } elseif (str_contains($path, '/480p/')) {
-                            $quality = '480p';
-                        } elseif (str_contains($path, '/320p/')) {
-                            $quality = '320p';
+                            //$duration = $ffprobe
+                            //->format($tempUrl) // local file path
+                            //->get('duration');
+
+                            $videoUrls[] = [
+                                'quality' => $quality,
+                                'url' => Storage::disk('s3')->temporaryUrl(
+                                    $path,
+                                    now()->addMinutes(30)
+                                ),
+                                //'duration' => $duration
+                            ];
+                        } catch (\Exception $e) {
+                            continue;
                         }
-
-                        $videoUrls[] = [
-                            'quality' => $quality,
-                            'url' => Storage::disk('s3')->temporaryUrl(
-                                $path,
-                                now()->addMinutes(30)
-                            )
-                        ];
                     }
                 }
 
@@ -540,13 +553,9 @@ class VideoController extends Controller
         });
 
         $language = Language::find($languageId);
-
         $categories = isset($categoryId) ? Category::where('id', $categoryId)->get() : Category::where('language_id', $languageId)->get();
-
         $subcategories = isset($data['SubCategory']) ? SubCategory::where('id', $data['SubCategory'])->get() : SubCategory::where('category_id', $categoryId)->get();
-
         $subjects = Subject::find($subjectId);
-
         $topics = Topic::where('subject_id', $subjects->id)->get();
 
         return [
@@ -567,19 +576,15 @@ class VideoController extends Controller
 
         if (!$categoryId) return null;
 
-        $videos = Video::where('sub_category_id', $data['SubCategory_2'])
+        $videos = Video::with('videoProgress')
+            ->where('sub_category_id', $data['SubCategory_2'])
             ->where('subject_id', $data['Subject_2'])
             ->get();
 
         $language = Language::find($languageId);
-
         $categories = isset($categoryId) ? Category::where('id', $categoryId)->get() : Category::where('language_id', $languageId)->get();
-
         $subcategories = isset($data['SubCategory_2']) ? SubCategory::where('id', $data['SubCategory_2'])->get() : SubCategory::where('category_id', $categoryId)->get();
-
-        // Get all the subjects for the subcategories
         $subjects = Subject::whereIn('sub_category_id', $subcategories->pluck('id')->toArray())->get();
-
         $topics = isset($data['Topic_2']) ? Topic::where('id', $data['Topic_2'])->get() : Topic::whereIn('subject_id', $subjects->pluck('id')->toArray())->get();
 
         return [
@@ -598,7 +603,7 @@ class VideoController extends Controller
             'user_id' => 'required|exists:google_users,id',
             'video_id' => 'required|exists:videos,id',
             'watched_seconds' => 'required|numeric|min:0',
-            'video_total_seconds' => 'required|numeric|min:0|max:100',
+            'video_total_seconds' => 'required|numeric|min:0',
         ]);
 
         $videoProgress = VideoProgress::updateOrCreate(

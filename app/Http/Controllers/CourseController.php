@@ -6,14 +6,12 @@ use Illuminate\Http\Request;
 use App\Models\Course;
 use App\Models\GoogleUser;
 use App\Models\UserCourse;
-
 use App\Models\Category;
 use App\Models\Language;
 use App\Models\SubCategory;
 use App\Models\Subject;
 use App\Models\Topic;
 use App\Models\Offer;
-use Illuminate\Support\Facades\DB;
 
 class CourseController extends Controller
 {
@@ -399,6 +397,7 @@ class CourseController extends Controller
                 return [
                     'id' => $course->id,
                     'name' => $course->name,
+                    'is_paid' => $course->is_paid,
                     'language_id' => $course->language_id,
                     'category_id' => $course->category_id,
                     'sub_category_id' => $course->sub_category_id,
@@ -408,7 +407,6 @@ class CourseController extends Controller
                     'banner' => $course->banner,
                     'meta_data' => $course->meta_data,
                     'features' => $course->features,
-
                     'offer' => $offer ? [
                         'id' => $offer->id,
                         'name' => $offer->name,
@@ -479,6 +477,18 @@ class CourseController extends Controller
                 'limit' => (int) $limit
             ];
         });
+
+        if (!$course->part_limit) {
+            $courseSubjectPositions = $course->subject_limit['position'];
+        } else {
+            $courseSubjectPositions = $course->part_limit['position'];
+        }
+
+        $formattedSubjects = collect($formattedSubjects)
+            ->sortBy(function ($item) use ($courseSubjectPositions) {
+                return $courseSubjectPositions[$item['subject_id']] ?? 999;
+            })
+            ->values();
 
         // Get marks and negative marks from the first identified subject in the data
         $marks = 0;

@@ -71,8 +71,8 @@ class SubjectController extends Controller
 
         $dropdown_list = [
             'Select Language' => $languages,
-            'Select Category' => $categories ?? [],
-            'Select Sub Category' => $subcategories ?? [],
+            'Select Category' => [],
+            'Select Sub Category' => [],
         ];
 
         return view('subjects.index', compact(
